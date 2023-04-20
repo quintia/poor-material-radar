@@ -1,4 +1,4 @@
-package mods;
+package net.quintia.mods;
 
 import com.mojang.logging.LogUtils;
 import net.minecraft.world.item.BlockItem;

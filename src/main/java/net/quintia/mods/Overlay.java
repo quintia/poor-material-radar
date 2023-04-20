@@ -1,4 +1,4 @@
-package mods;
+package net.quintia.mods;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import net.minecraft.client.Minecraft;
@@ -24,6 +24,8 @@ public class Overlay implements IGuiOverlay {
     private static final int FRAME_COLOR = 0x60FFFFFF;
     private static final int AXIS_COLOR = 0x40FFFFFF;
 
+    private static final int UNDEFINED_BLOCK_COLOR = 0xFF888888;
+
     public Overlay() {
     }
 
@@ -41,6 +43,13 @@ public class Overlay implements IGuiOverlay {
         if (mc.player == null) {
             return;
         }
+
+        double tick = (double)(System.currentTimeMillis() % 2000);  // 0 <= tick < 2000
+        int triangleWaveIntensity = (int)(tick / 2000.0 * 32.0);  // 0x00 <= triangleWaveIntensity < 0x20
+        if (0x10 < triangleWaveIntensity) {
+            triangleWaveIntensity = 0x20 - triangleWaveIntensity;  //  0x10 > triangleWaveIntensity > 0x00
+        }
+        int triangleWaveColorCode = (triangleWaveIntensity << 16) + (triangleWaveIntensity << 8) + triangleWaveIntensity;
 
         Vec3 eye = mc.player.getEyePosition();
         Vec3 lookVec = mc.player.getLookAngle();
@@ -89,9 +98,6 @@ public class Overlay implements IGuiOverlay {
                 FRAME_COLOR);
 
         // color gradation
-        int tick = (int) System.currentTimeMillis() % 1600;
-        int gradationElement = tick / 100;  //0x00..0x10
-        int gradationCode = (gradationElement << 16) + (gradationElement << 8) + gradationElement;
 
         // map
         Vec3 xzPlainLookVec = new Vec3(lookVec.x, 0.0d, lookVec.z).normalize();
@@ -111,9 +117,8 @@ public class Overlay implements IGuiOverlay {
 
                 // drawing expect AIR
                 if (pixelColor != 0x00FFFFFF) {
-
-                    if (block == Blocks.WATER || block == Blocks.LAVA) {
-                        pixelColor += gradationCode;
+                    if (block == Blocks.WATER || block == Blocks.LAVA || pixelColor == UNDEFINED_BLOCK_COLOR) {
+                        pixelColor += triangleWaveColorCode;
                     }
 
                     if (block == Blocks.SNOW
@@ -200,9 +205,9 @@ public class Overlay implements IGuiOverlay {
         } else if (block == Blocks.REDSTONE_BLOCK || block == Blocks.REDSTONE_ORE || block == Blocks.DEEPSLATE_REDSTONE_ORE) {
             color |= 0xFF0000;
         } else if (block == Blocks.MAGMA_BLOCK || block == Blocks.LAVA) {
-            color |= 0xd1540e;
+            color |= 0xdb4d06;
         } else if (block == Blocks.ICE || block == Blocks.PACKED_ICE || block == Blocks.SNOW) {
-            color |= 0x66ccff;
+            color |= 0xa6e1ff;
         } else if (block == Blocks.STONE_BRICKS || block == Blocks.STONE_BRICK_SLAB || block == Blocks.STONE_BRICK_STAIRS) {
             color |= 0x686868;
         } else if (block == Blocks.TORCH
@@ -231,7 +236,7 @@ public class Overlay implements IGuiOverlay {
             color |= 0xFFFFFF;
         } else {
             // default color
-            color |= 0x909090;
+            color = UNDEFINED_BLOCK_COLOR;
         }
 
         return color;
