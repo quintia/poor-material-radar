@@ -49,7 +49,7 @@ public class Overlay implements IGuiOverlay {
         if (0x10 < triangleWaveIntensity) {
             triangleWaveIntensity = 0x20 - triangleWaveIntensity;  //  0x10 > triangleWaveIntensity > 0x00
         }
-        int triangleWaveColorCode = (triangleWaveIntensity << 16) + (triangleWaveIntensity << 8) + triangleWaveIntensity;
+        int triangleWaveColorCode = 0x010101 * triangleWaveIntensity;
 
         Vec3 eye = mc.player.getEyePosition();
         Vec3 lookVec = mc.player.getLookAngle();
