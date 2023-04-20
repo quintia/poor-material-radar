@@ -25,6 +25,7 @@ public class Overlay implements IGuiOverlay {
     private static final int AXIS_COLOR = 0x40FFFFFF;
 
     private static final int UNDEFINED_BLOCK_COLOR = 0xFF888888;
+    private static final int WATER_COLOR = 0xFF3d60ee;
 
     public Overlay() {
     }
@@ -44,6 +45,7 @@ public class Overlay implements IGuiOverlay {
             return;
         }
 
+        // color gradation change
         double tick = (double)(System.currentTimeMillis() % 2000);  // 0 <= tick < 2000
         int triangleWaveIntensity = (int)(tick / 2000.0 * 32.0);  // 0x00 <= triangleWaveIntensity < 0x20
         if (0x10 < triangleWaveIntensity) {
@@ -97,8 +99,6 @@ public class Overlay implements IGuiOverlay {
                 MARGIN + PIXEL * SIZE + FRAME,  //shorten bottom
                 FRAME_COLOR);
 
-        // color gradation
-
         // map
         Vec3 xzPlainLookVec = new Vec3(lookVec.x, 0.0d, lookVec.z).normalize();
 
@@ -107,6 +107,7 @@ public class Overlay implements IGuiOverlay {
         if (directionZ != 0.0 && directionX != 0.0) {
             for (int front = 0; front < SIZE; front++) {
                 Vec3 player = new Vec3(eye.x, eye.y - mc.player.getEyeHeight(), eye.z);
+                Block above = null;
                 for (int y = 0; y < SIZE; y++) {
                     Block block = Objects.requireNonNull(mc.level).getBlockState(
                             new BlockPos(
@@ -124,12 +125,23 @@ public class Overlay implements IGuiOverlay {
 
                         if (block == Blocks.SNOW
                                 || block == Blocks.HAY_BLOCK
-//                            || block == Blocks.SEAGRASS  //上半分をWATERの色にしないと不自然
+                                || block == Blocks.KELP
                                 || block instanceof SlabBlock
                                 || block instanceof WoolCarpetBlock
                                 || block instanceof PressurePlateBlock
-                                || (material == Material.REPLACEABLE_PLANT && block != Blocks.LARGE_FERN)
+                                || (material == Material.REPLACEABLE_PLANT && above != block)
+                                || (material == Material.REPLACEABLE_WATER_PLANT && above != block)
                         ) {
+                            if (above == Blocks.WATER) {
+                                GuiComponent.fill(
+                                        poseStack,
+                                        width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                                        MARGIN + PIXEL * (y + 1) ,
+                                        width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                                        MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
+                                        WATER_COLOR + triangleWaveColorCode);
+                            }
+
                             // draw half tall
                             GuiComponent.fill(
                                     poseStack,
@@ -149,6 +161,8 @@ public class Overlay implements IGuiOverlay {
                                     pixelColor);
                         }
                     }
+
+                    above = block;
                 }
             }
         }
@@ -181,7 +195,7 @@ public class Overlay implements IGuiOverlay {
         if (block == Blocks.DIRT || block == Blocks.GRASS_BLOCK) {
             color |= 0x745844;
         } else if (block == Blocks.WATER) {
-            color |= 0x3d60ee;
+            color = WATER_COLOR;
         } else if (block == Blocks.SAND) {
             color |= 0xffe6b3;
         } else if (block == Blocks.SANDSTONE) {
@@ -226,8 +240,7 @@ public class Overlay implements IGuiOverlay {
                 || material == Material.PLANT
                 || material == Material.REPLACEABLE_PLANT
                 || material == Material.REPLACEABLE_WATER_PLANT) {
-            // Transparent blocks
-            color = 0xd000b300;
+            color |= 0x00b300;
         } else if (block instanceof LeavesBlock) {
             color |= 0x006700;
         } else if (material == Material.WOOD) {
