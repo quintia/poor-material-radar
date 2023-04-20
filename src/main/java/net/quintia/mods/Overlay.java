@@ -104,48 +104,50 @@ public class Overlay implements IGuiOverlay {
 
         double directionX = xzPlainLookVec.x;
         double directionZ = xzPlainLookVec.z;
-        for (int front = 0; front < SIZE; front++) {
-            Vec3 player = new Vec3(eye.x, eye.y - mc.player.getEyeHeight(), eye.z);
-            for (int y = 0; y < SIZE; y++) {
-                Block block = Objects.requireNonNull(mc.level).getBlockState(
-                        new BlockPos(
-                                player.x + directionX * (front - RANGE + 1),
-                                player.y - y + RANGE,
-                                player.z + directionZ * (front - RANGE + 1))).getBlock();
-                Material material = block.defaultBlockState().getMaterial();
-                int pixelColor = getPixelColor(mc, block, material);
+        if (directionZ != 0.0 && directionX != 0.0) {
+            for (int front = 0; front < SIZE; front++) {
+                Vec3 player = new Vec3(eye.x, eye.y - mc.player.getEyeHeight(), eye.z);
+                for (int y = 0; y < SIZE; y++) {
+                    Block block = Objects.requireNonNull(mc.level).getBlockState(
+                            new BlockPos(
+                                    player.x + directionX * (front - RANGE + 1),
+                                    player.y - y + RANGE,
+                                    player.z + directionZ * (front - RANGE + 1))).getBlock();
+                    Material material = block.defaultBlockState().getMaterial();
+                    int pixelColor = getPixelColor(mc, block, material);
 
-                // drawing expect AIR
-                if (pixelColor != 0x00FFFFFF) {
-                    if (block == Blocks.WATER || block == Blocks.LAVA || pixelColor == UNDEFINED_BLOCK_COLOR) {
-                        pixelColor += triangleWaveColorCode;
-                    }
+                    // drawing expect AIR
+                    if (pixelColor != 0x00FFFFFF) {
+                        if (block == Blocks.WATER || block == Blocks.LAVA || pixelColor == UNDEFINED_BLOCK_COLOR) {
+                            pixelColor += triangleWaveColorCode;
+                        }
 
-                    if (block == Blocks.SNOW
-                            || block == Blocks.HAY_BLOCK
+                        if (block == Blocks.SNOW
+                                || block == Blocks.HAY_BLOCK
 //                            || block == Blocks.SEAGRASS  //上半分をWATERの色にしないと不自然
-                            || block instanceof SlabBlock
-                            || block instanceof WoolCarpetBlock
-                            || block instanceof PressurePlateBlock
-                            || (material == Material.REPLACEABLE_PLANT && block != Blocks.LARGE_FERN)
-                    ) {
-                        // draw half tall
-                        GuiComponent.fill(
-                                poseStack,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
-                                MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
-                                MARGIN + PIXEL * (y + 2),
-                                pixelColor);
-                    } else {
-                        // draw
-                        GuiComponent.fill(
-                                poseStack,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
-                                MARGIN + PIXEL * (y + 1),
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
-                                MARGIN + PIXEL * (y + 2),
-                                pixelColor);
+                                || block instanceof SlabBlock
+                                || block instanceof WoolCarpetBlock
+                                || block instanceof PressurePlateBlock
+                                || (material == Material.REPLACEABLE_PLANT && block != Blocks.LARGE_FERN)
+                        ) {
+                            // draw half tall
+                            GuiComponent.fill(
+                                    poseStack,
+                                    width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                                    MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
+                                    width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                                    MARGIN + PIXEL * (y + 2),
+                                    pixelColor);
+                        } else {
+                            // draw
+                            GuiComponent.fill(
+                                    poseStack,
+                                    width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                                    MARGIN + PIXEL * (y + 1),
+                                    width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                                    MARGIN + PIXEL * (y + 2),
+                                    pixelColor);
+                        }
                     }
                 }
             }
