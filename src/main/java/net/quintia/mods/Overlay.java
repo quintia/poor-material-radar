@@ -117,6 +117,11 @@ public class Overlay implements IGuiOverlay {
 
                     Material material = block.defaultBlockState().getMaterial();
                     int pixelColor = getPixelColor(block, material);
+                    if (pixelColor == 0x000000) {
+                        // no drawing
+                        above = block;
+                        continue;
+                    }
                     if (pixelColor == 0xff000000) {
                         // undefined
                         GuiComponent.fill(
@@ -154,10 +159,13 @@ public class Overlay implements IGuiOverlay {
                     if (block == Blocks.SNOW
                             || block == Blocks.HAY_BLOCK
                             || block == Blocks.KELP
+                            || block == Blocks.SCULK_VEIN
+                            || block == Blocks.NETHER_SPROUTS
                             || block instanceof SlabBlock
                             || block instanceof WoolCarpetBlock
                             || block instanceof PressurePlateBlock
                             || block instanceof BaseRailBlock
+                            || block instanceof TrapDoorBlock
                             || (material == Material.REPLACEABLE_PLANT && above != block)
                             || (material == Material.REPLACEABLE_WATER_PLANT && above != block)
                     ) {
@@ -214,10 +222,9 @@ public class Overlay implements IGuiOverlay {
 
     private int getPixelColor(Block block, Material material) {
         // default color
-        int color = 0;
+        int color;
 
         if (block == Blocks.DIRT || block == Blocks.GRASS_BLOCK) {
-            // early return
             color = 0x745844;
         } else if (block == Blocks.WATER) {
             color = WATER_COLOR;
@@ -227,23 +234,45 @@ public class Overlay implements IGuiOverlay {
             color = 0xf7d899;
         } else if (block == Blocks.GRAVEL) {
             color = 0x727272;
-        } else if (block == Blocks.COAL_ORE || block == Blocks.COAL_BLOCK || block == Blocks.DEEPSLATE_COAL_ORE) {
+        } else if (block == Blocks.COAL_ORE
+                || block == Blocks.COAL_BLOCK
+                || block == Blocks.DEEPSLATE_COAL_ORE
+        ) {
             color = 0x6f0607;
-        } else if (block == Blocks.IRON_ORE || block == Blocks.IRON_BLOCK || block == Blocks.DEEPSLATE_IRON_ORE) {
+        } else if (block == Blocks.IRON_ORE
+                || block == Blocks.IRON_BLOCK
+                || block == Blocks.DEEPSLATE_IRON_ORE
+                || block == Blocks.IRON_BARS) {
             color = 0xffffff;
-        } else if (block == Blocks.COPPER_ORE || block == Blocks.COPPER_BLOCK || block == Blocks.DEEPSLATE_COPPER_ORE) {
+        } else if (block == Blocks.COPPER_ORE
+                || block == Blocks.COPPER_BLOCK
+                || block == Blocks.DEEPSLATE_COPPER_ORE) {
             color = 0xbf5e49;
-        } else if (block == Blocks.DIAMOND_ORE || block == Blocks.DIAMOND_BLOCK || block == Blocks.DEEPSLATE_DIAMOND_ORE) {
+        } else if (block == Blocks.DIAMOND_ORE
+                || block == Blocks.DIAMOND_BLOCK
+                || block == Blocks.DEEPSLATE_DIAMOND_ORE) {
             color = 0x00ffff;
-        } else if (block == Blocks.GOLD_ORE || block == Blocks.GOLD_BLOCK || block == Blocks.DEEPSLATE_GOLD_ORE) {
+        } else if (block == Blocks.GOLD_ORE
+                || block == Blocks.GOLD_BLOCK
+                || block == Blocks.NETHER_GOLD_ORE
+                || block == Blocks.DEEPSLATE_GOLD_ORE) {
             color = 0xffff00;
-        } else if (block == Blocks.EMERALD_ORE || block == Blocks.EMERALD_BLOCK || block == Blocks.DEEPSLATE_EMERALD_ORE) {
+        } else if (block == Blocks.EMERALD_ORE
+                || block == Blocks.EMERALD_BLOCK
+                || block == Blocks.DEEPSLATE_EMERALD_ORE) {
             color = 0x00ff51;
-        } else if (block == Blocks.LAPIS_ORE || block == Blocks.LAPIS_BLOCK || block == Blocks.DEEPSLATE_LAPIS_ORE) {
+        } else if (block == Blocks.LAPIS_ORE
+                || block == Blocks.LAPIS_BLOCK
+                || block == Blocks.DEEPSLATE_LAPIS_ORE) {
             color = 0x000080;
-        } else if (block == Blocks.REDSTONE_BLOCK || block == Blocks.REDSTONE_ORE || block == Blocks.DEEPSLATE_REDSTONE_ORE) {
-            color = 0xFF0000;
-        } else if (block == Blocks.MAGMA_BLOCK || block == Blocks.LAVA) {
+        } else if (block == Blocks.REDSTONE_BLOCK
+                || block == Blocks.REDSTONE_ORE
+                || block == Blocks.DEEPSLATE_REDSTONE_ORE) {
+            color = 0xff0000;
+        } else if (block == Blocks.NETHER_QUARTZ_ORE) {
+            color = 0xe0e0e0;
+        } else if (block == Blocks.MAGMA_BLOCK
+                || block == Blocks.LAVA) {
             color = 0xdb4d06;
         } else if (block == Blocks.CAMPFIRE) {
             color = 0xff4000;
@@ -253,14 +282,21 @@ public class Overlay implements IGuiOverlay {
             color = 0x00b300;
         } else if (block instanceof BaseRailBlock) {
             color = 0xc00000;
-        } else if (block == Blocks.ICE || block == Blocks.PACKED_ICE || block == Blocks.SNOW) {
+        } else if (block == Blocks.ICE
+                || block == Blocks.PACKED_ICE
+                || block == Blocks.SNOW) {
             color = 0xa6e1ff;
-        } else if (block == Blocks.STONE_BRICKS || block == Blocks.STONE_BRICK_SLAB || block == Blocks.STONE_BRICK_STAIRS) {
+        } else if (block == Blocks.STONE_BRICKS
+                || block == Blocks.STONE_BRICK_SLAB
+                || block == Blocks.STONE_BRICK_STAIRS) {
             color = 0x686868;
         } else if (block == Blocks.TORCH
                 || block == Blocks.WALL_TORCH
                 || block == Blocks.JACK_O_LANTERN
-                || block == Blocks.FURNACE /*炉*/) {
+                || block instanceof CandleBlock
+                || block instanceof AbstractFurnaceBlock
+                || block instanceof AnvilBlock
+                || block instanceof RodBlock) {
             color = 0xd08000;
         } else if (block == Blocks.REDSTONE_TORCH
                 || block == Blocks.REDSTONE_WALL_TORCH) {
@@ -275,18 +311,28 @@ public class Overlay implements IGuiOverlay {
             color = 0x006700;
         } else if (block instanceof AmethystBlock) {
             color = 0x5e43b0;
-        } else if (material == Material.NETHER_WOOD) {
+        } else if (block instanceof FlowerPotBlock) {
+            color = 0x803839;
+        } else if (block instanceof ButtonBlock) {
+            return 0x000000;
+        } else if (material == Material.NETHER_WOOD
+                || block == Blocks.NETHER_SPROUTS
+                || material == Material.SCULK) {
             // need before WOOD
             color = 0x337675;
         } else if (material == Material.WOOD
-                || block instanceof RotatedPillarBlock) {
+                || block instanceof RotatedPillarBlock
+                || block instanceof RootsBlock) {
             color = 0x654636;
         } else if (material == Material.DIRT) {
             color = 0x745844;
-        } else if (material == Material.STONE) {
+        } else if (material == Material.STONE
+                || block instanceof ConcretePowderBlock) {
             color = 0x686868;
         } else if (material == Material.WOOL) {
             color = 0xe0e0e0;
+        } else {
+            color = 0;
         }
 
         return color | 0xFF000000;
