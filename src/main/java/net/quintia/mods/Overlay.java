@@ -7,6 +7,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.grower.AbstractTreeGrower;
 import net.minecraft.world.level.material.Material;
+import net.minecraft.world.phys.Vec2;
 import net.minecraft.world.phys.Vec3;
 import net.minecraftforge.client.gui.overlay.ForgeGui;
 import net.minecraftforge.client.gui.overlay.IGuiOverlay;
@@ -94,112 +95,117 @@ public class Overlay implements IGuiOverlay {
         int triangleWaveColorCode = 0x010101 * triangleWaveIntensity;
 
         // map
-        Vec3 xzPlainLookVec = new Vec3(lookVec.x, 0.0d, lookVec.z).normalize();
-        double directionX = xzPlainLookVec.x;
-        double directionZ = xzPlainLookVec.z;
 
-        if (directionZ != 0.0 && directionX != 0.0) {
-            Vec3 player = new Vec3(eye.x, eye.y - mc.player.getEyeHeight(), eye.z);
+        // プレイヤーの体の向き（水平回転）
+        float yaw = mc.player.getYRot();
 
-            for (int front = 0; front < SIZE; front++) {
-                Block above = null;
-                for (int y = 0; y < SIZE; y++) {
-                    Block block = mc.level.getBlockState(
-                            new BlockPos(
-                                    player.x + directionX * (front - RANGE + 1),
-                                    player.y - y + RANGE,
-                                    player.z + directionZ * (front - RANGE + 1))).getBlock();
+        // ラジアンに変換
+        float rad = (float)Math.toRadians(yaw);
 
-                    if (block == Blocks.AIR || block == Blocks.VOID_AIR) {
-                        above = block;
-                        continue;
-                    }
+        // XZ平面上の前方ベクトル
+        double directionX = -Math.sin(rad);
+        double directionZ = Math.cos(rad);
 
-                    Material material = block.defaultBlockState().getMaterial();
-                    int pixelColor = getPixelColor(block, material);
-                    if (pixelColor == 0x000000) {
-                        // no drawing
-                        above = block;
-                        continue;
-                    }
-                    if (pixelColor == 0xff000000) {
-                        // undefined
-                        GuiComponent.fill(
-                                poseStack,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
-                                MARGIN + PIXEL * (y + 1),
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
-                                MARGIN + PIXEL * (y + 2),
-                                UNDEFINED_BLOCK_COLOR);
-                        GuiComponent.fill(
-                                poseStack,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front + 1,
-                                MARGIN + PIXEL * (y + 1) + 1,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1) - 1,
-                                MARGIN + PIXEL * (y + 2) - 1,
-                                AXIS_COLOR);
-                        above = block;
-                        continue;
-                    }
+        Vec3 player = new Vec3(eye.x, eye.y - mc.player.getEyeHeight(), eye.z);
 
-                    // color gradation change
-                    if (pixelColor == UNDEFINED_BLOCK_COLOR
-                            || block == Blocks.WATER
-                            || block == Blocks.LAVA
-                            || block == Blocks.MAGMA_BLOCK
-                            || block == Blocks.TORCH
-                            || block == Blocks.WALL_TORCH
-                            || block == Blocks.JACK_O_LANTERN
-                            || block == Blocks.FURNACE
-                            || block == Blocks.REDSTONE_TORCH
-                            || block == Blocks.REDSTONE_WALL_TORCH) {
-                        pixelColor += triangleWaveColorCode;
-                    }
+        for (int front = 0; front < SIZE; front++) {
+            Block above = null;
+            for (int y = 0; y < SIZE; y++) {
+                Block block = mc.level.getBlockState(
+                        new BlockPos(
+                                player.x + directionX * (front - RANGE + 1),
+                                player.y - y + RANGE,
+                                player.z + directionZ * (front - RANGE + 1))).getBlock();
 
-                    if (block == Blocks.SNOW
-                            || block == Blocks.HAY_BLOCK
-                            || block == Blocks.KELP
-                            || block == Blocks.SCULK_VEIN
-                            || block == Blocks.NETHER_SPROUTS
-                            || block instanceof SlabBlock
-                            || block instanceof WoolCarpetBlock
-                            || block instanceof PressurePlateBlock
-                            || block instanceof BaseRailBlock
-                            || block instanceof TrapDoorBlock
-                            || (material == Material.REPLACEABLE_PLANT && above != block)
-                            || (material == Material.REPLACEABLE_WATER_PLANT && above != block)
-                    ) {
-                        if (above == Blocks.WATER) {
-                            GuiComponent.fill(
-                                    poseStack,
-                                    width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
-                                    MARGIN + PIXEL * (y + 1),
-                                    width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
-                                    MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
-                                    WATER_COLOR + triangleWaveColorCode);
-                        }
-
-                        // draw half tall
-                        GuiComponent.fill(
-                                poseStack,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
-                                MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
-                                MARGIN + PIXEL * (y + 2),
-                                pixelColor);
-                    } else {
-                        // draw
-                        GuiComponent.fill(
-                                poseStack,
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
-                                MARGIN + PIXEL * (y + 1),
-                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
-                                MARGIN + PIXEL * (y + 2),
-                                pixelColor);
-                    }
-
+                if (block == Blocks.AIR || block == Blocks.VOID_AIR) {
                     above = block;
+                    continue;
                 }
+
+                Material material = block.defaultBlockState().getMaterial();
+                int pixelColor = getPixelColor(block, material);
+                if (pixelColor == 0x000000) {
+                    // no drawing
+                    above = block;
+                    continue;
+                }
+                if (pixelColor == 0xff000000) {
+                    // undefined
+                    GuiComponent.fill(
+                            poseStack,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                            MARGIN + PIXEL * (y + 1),
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                            MARGIN + PIXEL * (y + 2),
+                            UNDEFINED_BLOCK_COLOR);
+                    GuiComponent.fill(
+                            poseStack,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front + 1,
+                            MARGIN + PIXEL * (y + 1) + 1,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1) - 1,
+                            MARGIN + PIXEL * (y + 2) - 1,
+                            AXIS_COLOR);
+                    above = block;
+                    continue;
+                }
+
+                // color gradation change
+                if (pixelColor == UNDEFINED_BLOCK_COLOR
+                        || block == Blocks.WATER
+                        || block == Blocks.LAVA
+                        || block == Blocks.MAGMA_BLOCK
+                        || block == Blocks.TORCH
+                        || block == Blocks.WALL_TORCH
+                        || block == Blocks.JACK_O_LANTERN
+                        || block == Blocks.FURNACE
+                        || block == Blocks.REDSTONE_TORCH
+                        || block == Blocks.REDSTONE_WALL_TORCH) {
+                    pixelColor += triangleWaveColorCode;
+                }
+
+                if (block == Blocks.SNOW
+                        || block == Blocks.HAY_BLOCK
+                        || block == Blocks.KELP
+                        || block == Blocks.SCULK_VEIN
+                        || block == Blocks.NETHER_SPROUTS
+                        || block instanceof SlabBlock
+                        || block instanceof WoolCarpetBlock
+                        || block instanceof PressurePlateBlock
+                        || block instanceof BaseRailBlock
+                        || block instanceof TrapDoorBlock
+                        || (material == Material.REPLACEABLE_PLANT && above != block)
+                        || (material == Material.REPLACEABLE_WATER_PLANT && above != block)
+                ) {
+                    if (above == Blocks.WATER) {
+                        GuiComponent.fill(
+                                poseStack,
+                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                                MARGIN + PIXEL * (y + 1),
+                                width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                                MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
+                                WATER_COLOR + triangleWaveColorCode);
+                    }
+
+                    // draw half tall
+                    GuiComponent.fill(
+                            poseStack,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                            MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                            MARGIN + PIXEL * (y + 2),
+                            pixelColor);
+                } else {
+                    // draw
+                    GuiComponent.fill(
+                            poseStack,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front,
+                            MARGIN + PIXEL * (y + 1),
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
+                            MARGIN + PIXEL * (y + 2),
+                            pixelColor);
+                }
+
+                above = block;
             }
         }
 
@@ -234,6 +240,8 @@ public class Overlay implements IGuiOverlay {
             color = 0xf7d899;
         } else if (block == Blocks.GRAVEL) {
             color = 0x727272;
+        } else if (block == Blocks.CLAY) {
+            color = 0x606060;
         } else if (block == Blocks.COAL_ORE
                 || block == Blocks.COAL_BLOCK
                 || block == Blocks.DEEPSLATE_COAL_ORE
@@ -314,6 +322,7 @@ public class Overlay implements IGuiOverlay {
         } else if (block instanceof FlowerPotBlock) {
             color = 0x803839;
         } else if (block instanceof ButtonBlock) {
+            // transparent
             return 0x000000;
         } else if (material == Material.NETHER_WOOD
                 || block == Blocks.NETHER_SPROUTS
