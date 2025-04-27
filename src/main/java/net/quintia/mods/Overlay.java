@@ -117,12 +117,13 @@ public class Overlay implements IGuiOverlay {
                                 player.y - y + RANGE,
                                 player.z + directionZ * (front - RANGE + 1))).getBlock();
 
-                if (block == Blocks.AIR || block == Blocks.VOID_AIR) {
+                Material material = block.defaultBlockState().getMaterial();
+
+                if (material == Material.AIR) {
                     above = block;
                     continue;
                 }
 
-                Material material = block.defaultBlockState().getMaterial();
                 int pixelColor = getPixelColor(block, material);
                 if (pixelColor == 0x000000) {
                     // no drawing
@@ -176,6 +177,7 @@ public class Overlay implements IGuiOverlay {
                         || (material == Material.REPLACEABLE_PLANT && above != block)
                         || (material == Material.REPLACEABLE_WATER_PLANT && above != block)
                 ) {
+                    // draw the upper half with water if the above block is water (instead of air)
                     if (above == Blocks.WATER) {
                         GuiComponent.fill(
                                 poseStack,
@@ -193,6 +195,18 @@ public class Overlay implements IGuiOverlay {
                             MARGIN + PIXEL * (y + 2) - HALF_PIXEL,
                             width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1),
                             MARGIN + PIXEL * (y + 2),
+                            pixelColor);
+                } else if (block == Blocks.TORCH
+                        || block == Blocks.WALL_TORCH
+                        || block == Blocks.REDSTONE_TORCH
+                        || block == Blocks.REDSTONE_WALL_TORCH) {
+                    // draw smaller
+                    GuiComponent.fill(
+                            poseStack,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * front + 1,
+                            MARGIN + PIXEL * (y + 1) + 1,
+                            width - MARGIN - FRAME - PIXEL * SIZE + PIXEL * (front + 1) - 1,
+                            MARGIN + PIXEL * (y + 2) - 1,
                             pixelColor);
                 } else {
                     // draw
